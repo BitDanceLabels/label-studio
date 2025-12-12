@@ -1,0 +1,9 @@
+modules:
+  - app.plugins.push_notify
+  - app.plugins.sample_tasks
+  # Example with enable flag (default true)
+  - module: app.plugins.billing_tasks
+    enabled: true
+  # Disabled entries are skipped
+  - module: app.plugins.experimental
+    enabled: false

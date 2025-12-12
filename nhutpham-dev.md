@@ -259,3 +259,13 @@ curl -X POST http://localhost:9090/predict \
   -H "Content-Type: application/json" \
   -d '{"data": {"text": "Giới thiệu ngắn về Bumbee AI", "context": "API group: marketing..."}}'
 Sau khi chạy server, vào Label Studio → Project Settings → Model → Backend URL: http://host.docker.internal:9090/predict (hoặc địa chỉ tương ứng) → Validate and Save → bật “Use model predictions”.
+
+# Label Studio wrapper API (dành cho RAG 3rd party)
+Env bắt buộc: `LABEL_STUDIO_BASE`, `LABEL_STUDIO_TOKEN` (mặc định timeout 60s, không cần auth riêng cho endpoint này).
+
+- `POST /label/projects` with body `{"name": "...", "description": "...", "label_config": "<optional xml>"}` → tạo project trên Label Studio, trả về `{"project_id": 123}`. Nếu không gửi `label_config` sẽ dùng template mặc định (Text + Textarea).
+- `GET /label/projects` → trả `{"projects": [{"id":..,"name":..,"description":..}, ...]}`.
+- `POST /label/tasks` with body `{"project_id":123,"samples":[{"data":{...},"meta":{},"predictions":[...]}],"dataset_id":"ds1","tags":["finance"]}` → import tasks vào project, auto nhét `dataset_id` + `tags` vào `task.meta` nếu chưa có. Trả `{"imported": N, "project_id":123}`.
+- `GET /label/tasks?project_id=123` → proxy danh sách tasks gốc từ Label Studio.
+
+Base URL chính là `LABEL_STUDIO_BASE` (ví dụ http://host.docker.internal:8080), token là `LABEL_STUDIO_TOKEN` (PAT trong Account & Settings). Payload samples có thể giữ nguyên schema của Label Studio (data/meta/predictions). Tags/dataset_id được thêm vào meta nếu chưa có.

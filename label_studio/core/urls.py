@@ -71,6 +71,7 @@ urlpatterns = [
     re_path(r'^', include('webhooks.urls')),
     re_path(r'^', include('labels_manager.urls')),
     re_path(r'^', include('fsm.urls')),
+    re_path(r'^', include('label_wrapper.urls')),
     re_path(r'version/', views.version_page, name='version'),  # html page
     re_path(r'api/version/', views.version_page, name='api-version'),  # json response
     re_path(r'health/', views.health, name='health'),

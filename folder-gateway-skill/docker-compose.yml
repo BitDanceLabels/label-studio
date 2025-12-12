@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  gateway:
+    # Build from repo root so it can import app/main
+    build:
+      context: ..
+    env_file:
+      - ../.env
+    environment:
+      # Optional: override to skip DB if not needed
+      - DATABASE_URL_ASYNCPG_DRIVER=
+      - APP_CONFIG=config.yml
+    ports:
+      - "30090:30090"
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 30090
+      --reload
+    depends_on:
+      - redis
+      - rabbitmq
+
+  ai-math-service:
+    build:
+      context: ./ai-math-service
+    environment:
+      - SERVICE_NAME=ai-math-service
+      - SERVICE_BASE_URL=http://ai-math-service:8082
+      - GATEWAY_URL=http://gateway:30090
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    ports:
+      - "8082:8082"
+    depends_on:
+      - redis
+      - rabbitmq
+      - gateway
+
+  ai-task-worker:
+    build:
+      context: ./ai-task-worker
+    environment:
+      - BROKER=amqp://guest:guest@rabbitmq:5672//
+      - REDIS_URL=redis://redis:6379/0
+      - QUEUE_NAME=ai_celery
+    depends_on:
+      - redis
+      - rabbitmq
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
